@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>San Valentín Elizalde</title>
+
+    <style>
+        /* ===== BASE ===== */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #0f172a;
+            overflow: hidden;
+            font-family: system-ui, Arial, sans-serif;
+        }
+
+        /* ===== FRONT ===== */
+        .front {
+            width: min(520px, 92vw);
+            height: min(620px, 86vh);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+            display: grid;
+            place-items: center;
+            transition: opacity 600ms ease, transform 600ms ease;
+        }
+
+        .front.fade-out {
+            opacity: 0;
+            transform: scale(.95);
+            pointer-events: none;
+        }
+
+        #playBtn {
+            padding: 14px 22px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 12px;
+            border: 0;
+            cursor: pointer;
+        }
+
+        /* ===== SCENE ===== */
+        .scene {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 400ms ease;
+        }
+
+        .scene.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ===== IMAGEN ===== */
+        .img-wrap {
+            width: min(720px, 92vw);
+            border-radius: 18px;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #resultImg {
+            width: 100%;
+            transform: scale(.75);
+            opacity: 0;
+            filter: blur(8px);
+            transition: transform 1s ease, opacity .8s ease, filter 1s ease;
+        }
+
+        #resultImg.zoom-in {
+            transform: scale(1);
+            opacity: 1;
+            filter: blur(0);
+        }
+
+        /* ===== FLORES ===== */
+        .flowers {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        .flower {
+            position: absolute;
+            top: -10%;
+            font-size: 28px;
+            animation: fall linear forwards;
+            opacity: 0.9;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(120vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Fade out de flores */
+        .flowers.fade {
+            animation: flowersFade 1.5s ease forwards;
+        }
+
+        @keyframes flowersFade {
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- FRONT -->
+    <div id="front" class="front">
+        <button id="playBtn">▶ Reproducir</button>
+    </div>
+
+    <!-- SCENE -->
+    <div id="scene" class="scene">
+        <div class="img-wrap">
+            <img id="resultImg" src="{{ url_for('static', filename='img/Valentin.jpg') }}">
+        </div>
+    </div>
+
+    <!-- FLORES -->
+    <div id="flowers" class="flowers"></div>
+
+    <!-- AUDIO -->
+    <audio id="audio">
+        <source src="{{ url_for('static', filename='audio/mi_mayor_anhelo.mp3') }}" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const btn = document.getElementById("playBtn");
+        const front = document.getElementById("front");
+        const scene = document.getElementById("scene");
+        const img = document.getElementById("resultImg");
+        const audio = document.getElementById("audio");
+        const flowers = document.getElementById("flowers");
+
+        let flowerInterval = null;
+
+        btn.addEventListener("click", async () => {
+            btn.disabled = true;
+
+            audio.currentTime = 0;
+            await audio.play();
+
+            // Fade del front
+            front.classList.add("fade-out");
+
+            setTimeout(() => {
+                front.style.display = "none";
+                scene.classList.add("show");
+                startFlowers(); // 🌹 empieza lluvia infinita
+            }, 600);
+
+            setTimeout(() => {
+                img.classList.add("zoom-in");
+            }, 2000);
+        });
+
+        /* 🌹 Generador continuo */
+        function startFlowers() {
+            const emojis = ["🌹", "🌸", "🌺", "💐", "🌷"];
+
+            flowerInterval = setInterval(() => {
+                const f = document.createElement("div");
+                f.className = "flower";
+                f.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                f.style.left = Math.random() * 100 + "vw";
+                f.style.animationDuration = 3 + Math.random() * 3 + "s";
+                f.style.fontSize = 20 + Math.random() * 25 + "px";
+
+                flowers.appendChild(f);
+
+                setTimeout(() => f.remove(), 6000);
+            }, 150); // frecuencia de flores
+        }
+
+        /* 🎵 Cuando termina la canción */
+        audio.addEventListener("ended", () => {
+            clearInterval(flowerInterval); // detener generación
+        });
+    </script>
+
+</body>
+
+</html>
